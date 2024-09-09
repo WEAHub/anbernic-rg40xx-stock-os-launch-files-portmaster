@@ -7,9 +7,7 @@ XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
 SHDIR=$(dirname "$0")
 GAMEDIR="$SHDIR/soh"
 
-cd $GAMEDIR
-
-# Find control folder
+# Load control configurations and device info
 if [ -d "/opt/system/Tools/PortMaster/" ]; then
   controlfolder="/opt/system/Tools/PortMaster"
 elif [ -d "/opt/tools/PortMaster/" ]; then
@@ -20,7 +18,6 @@ else
   controlfolder="/roms/ports/PortMaster"
 fi
 
-# Load control configurations and device info
 source $controlfolder/control.txt
 source $controlfolder/device_info.txt
 
@@ -35,16 +32,17 @@ export LD_LIBRARY_PATH="libs:/usr/lib"
 $ESUDO chmod 666 /dev/tty0
 $ESUDO chmod 666 /dev/tty1
 
+cd $GAMEDIR
 rm -rf logs/* && exec > >(tee "log.txt") 2>&1
 cp -f "bin/performance.elf" soh.elf
 
 $ESUDO chmod 777 $GAMEDIR/soh.elf
 $GPTOKEYB "soh.elf" -c "soh.gptk" & 
 ./soh.elf
-
 rm -rf "soh.log"
 
 $ESUDO kill -9 $(pidof gptokeyb)
 $ESUDO systemctl restart oga_events & 
+
 printf "\033c" > /dev/tty1
 printf "\033c" > /dev/tty0
