@@ -1,15 +1,7 @@
 #!/bin/bash
 # Built from https://github.com/alexbatalov/fallout2-ce
-export SDL_GAMECONTROLLERCONFIG="$sdl_controllerconfig"
-export TEXTINPUTPRESET="Name"
-export TEXTINPUTINTERACTIVE="Y"
-export TEXTINPUTNOAUTOCAPITALS="Y"
-
-SHDIR=$(dirname "$0")
-PORTNAME="Fallout 1"
-PORTDIR="$SHDIR/fallout1"
-
-cd "$PORTDIR"
+export HOME=/root
+XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
 
 if [ -d "/opt/system/Tools/PortMaster/" ]; then
   controlfolder="/opt/system/Tools/PortMaster"
@@ -22,6 +14,9 @@ else
 fi
 
 source $controlfolder/control.txt
+source $controlfolder/device_info.txt
+
+PORTNAME="Fallout 1"
 
 to_lower_case() {
     for SRC in $(find "$1" -depth); do
@@ -34,8 +29,12 @@ to_lower_case() {
 
 get_controls
 
+SHDIR=$(dirname "$0")
+PORTDIR="$SHDIR/fallout1"
+
+cd "$PORTDIR"
+
 $ESUDO chmod 666 /dev/tty1
-$ESUDO chmod 666 /dev/uinput
 
 for file in data critter.dat master.dat; do
     if [[ ! -e "$file" ]]; then
@@ -60,10 +59,21 @@ for file in data critter.dat master.dat; do
     fi
 done
 
+$ESUDO chmod 666 /dev/tty0
+$ESUDO chmod 666 /dev/uinput
+export SDL_GAMECONTROLLERCONFIG="$sdl_controllerconfig"
+
+export TEXTINPUTPRESET="Name"
+export TEXTINPUTINTERACTIVE="Y"
+export TEXTINPUTNOAUTOCAPITALS="Y"
+
+$ESUDO chmod 777 $GAMEDIR/fallout-ce.elf
 $GPTOKEYB "fallout-ce" -c "./fallout1.gptk.$ANALOG_STICKS" textinput &
-./fallout-ce 2>&1 | tee -a ./log.txt
+./fallout-ce
 
 $ESUDO kill -9 $(pidof gptokeyb)
+unset LD_LIBRARY_PATH
 unset SDL_GAMECONTROLLERCONFIG
 $ESUDO systemctl restart oga_events &
 printf "\033c" >> /dev/tty1
+printf "\033c" >> /dev/uinput
