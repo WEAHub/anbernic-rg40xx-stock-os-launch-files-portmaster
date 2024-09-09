@@ -60,7 +60,7 @@ for file in data critter.dat master.dat; do
     fi
 done
 
-$GPTOKEYB "fallout-ce" -c "./fallout1.gptk.2" textinput &
+$GPTOKEYB "fallout-ce" -c "./fallout1.gptk.$ANALOG_STICKS" textinput &
 ./fallout-ce 2>&1 | tee -a ./log.txt
 
 $ESUDO kill -9 $(pidof gptokeyb)
